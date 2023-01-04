@@ -129,9 +129,9 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 const options = { timeZone: 'Europe/Paris' };
                 let end = new Date(event.end);
 
-                start = start.toLocaleString('fr-FR', options);
-                end = end.toLocaleString('fr-FR', options);
-                
+                start = new Date(start.toLocaleString('fr-FR', options));
+                end = new Date(end.toLocaleString('fr-FR', options));
+                console.log(start)
                 return {
                     type: `${type} ${matiere} ${nGroup || ""}`,
                     location: `${event.location}`,
