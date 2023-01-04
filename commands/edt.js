@@ -125,9 +125,13 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 const matiere = parseSummaryString(event.summary).toString();
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
 
-                const start = new Date(event.start);
-                const end = new Date(event.end);
+                let start = new Date(event.start);
+                const options = { timeZone: 'Europe/Paris' };
+                let end = new Date(event.end);
 
+                start = start.toLocaleString('fr-FR', options);
+                end = end.toLocaleString('fr-FR', options);
+                
                 return {
                     type: `${type} ${matiere} ${nGroup || ""}`,
                     location: `${event.location}`,
@@ -232,11 +236,6 @@ function sendEmbed(message, targetDate, filteredEvents) {
 			value: `${filteredEvents[event].time}`,
         });
     }
-    /*
-    filteredEvents[event].type,
-    filteredEvents[event].location,
-    filteredEvents[event].time
-    */
 
     channel.send({ embeds: [response] });
 }
