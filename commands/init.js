@@ -5,6 +5,7 @@ module.exports = {
     name: 'init',
 	description: 'Init the server by creating all the needed roles and setting up everything correctly',
 	execute(message, args) {
+        if (message.author.id !==  "236834751325929472") return;
         message.reply("I've heard your request..");
         createAllRoles(message);
 
@@ -97,17 +98,17 @@ function createWelcomeChannel(message) {
     type: ChannelType.GuildText, // The type of channel, either 'text' or 'voice'
     permissionOverwrites: [], // An array of permission overwrites for the channel
     position: 0, // The position of the channel in the channel list
-  })
-    .then(channel => {
-      console.log(`Created new channel named ${channel.name}`);
-    })
+  });
+
 }
 
 function fillWelcomeChannel(message) {
   // should never be undefined or null
   const channel = message.guild.channels.cache.find(channel => channel.name === "accueil");
 
-  channel.send("Obligatoire")
+  channel.send("Bienvenue !\nPour utiliser ce serveur et le bot qui lui est associé, il suffit de mettre une réaction à votre groupe, celui-ci se trouve au lien suivant : \nhttps://www.fil.univ-lille.fr/~roos/l3info/groupes/etudiants.pdf\n\nSi il y a un quelconque soucis, n'hésitez pas à harceler <@236834751325929472> en DM !\n")
+
+  channel.send("Obligatoire (Projet/Reseau/Tec/...)")
     .then(message => {
       message.react("1️⃣")
       message.react("2️⃣")
@@ -115,6 +116,24 @@ function fillWelcomeChannel(message) {
       message.react("4️⃣")
       message.react("5️⃣")
       message.react("6️⃣")
+    })
+
+    channel.send("JSFS")
+    .then(message => {
+      message.react("1️⃣")
+      message.react("2️⃣")
+      message.react("3️⃣")
+      message.react("4️⃣")
+      message.react("5️⃣")
+    })
+
+  channel.send("GL")
+    .then(message => {
+      message.react("1️⃣")
+      message.react("2️⃣")
+      message.react("3️⃣")
+      message.react("4️⃣")
+      message.react("5️⃣")
     })
   
   channel.send("Archi")
@@ -132,23 +151,7 @@ function fillWelcomeChannel(message) {
       message.react("4️⃣")
     })
 
-  channel.send("JSFS")
-    .then(message => {
-      message.react("1️⃣")
-      message.react("2️⃣")
-      message.react("3️⃣")
-      message.react("4️⃣")
-      message.react("5️⃣")
-    })
-
-  channel.send("GL")
-    .then(message => {
-      message.react("1️⃣")
-      message.react("2️⃣")
-      message.react("3️⃣")
-      message.react("4️⃣")
-      message.react("5️⃣")
-    })
+  
     
   channel.send("LAAS")
     .then(message => {
@@ -165,7 +168,7 @@ function fillWelcomeChannel(message) {
       message.react("3️⃣")
     })
     
-  channel.send("OPTIONS : \nBIOINFO : 1, ICHP : 2, II2D : 3, MAL : 4, META : 5, PDM 6")
+  channel.send("OPTIONS : \n*1 : BIOINFO | 2 : ICHP | 3 : II2D | 4 : MAL | 5 : META | 6 : PDM*")
     .then(message => {
       message.react("1️⃣")
       message.react("2️⃣")
@@ -174,5 +177,7 @@ function fillWelcomeChannel(message) {
       message.react("5️⃣")
       message.react("6️⃣")
     })
+
+    channel.send("Ensuite, quand vos groupes seront cochés, il vous suffira de vous rendre dans #edt et d'y tester les commandes suivantes :\n__**Listes des commandes :**__\n`!edt` : Donne l'emploi du temps du jour\n`!edt demain` : Donne l'emploi du temps de demain\n`!edt <jour de la semaine>` : Donne l'emploi du temps du jour de la semaine en question")
 }
 

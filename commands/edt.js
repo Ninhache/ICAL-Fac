@@ -209,10 +209,16 @@ function sendEmbed(message, targetDate, filteredEvents) {
     const channel = message.channel;
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     
+    //.setFooter('Requested by @' + message.author.username, message.author.avatarURL())
+
     const response = {
         color: 0x0099FF,
         title: `${targetDate.toLocaleDateString('fr-FR', options)}`,
-        fields: []
+        fields: [],
+        footer: {
+            text: `Requested by @${message.author.username}`,
+            icon_url: `${message.author.avatarURL()}`,
+        },
     } 
 
     /*

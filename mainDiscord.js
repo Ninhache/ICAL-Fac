@@ -23,14 +23,6 @@ for (const file of commandFiles) {
 client.once('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`);
     client.user.setActivity('!edt');
-
-	/*
-	const channels = client.channels.cache;
-  	const channelArray = Array.from(channels.values());
-  	const homeChannels = channelArray.filter(channel => channel.name === 'accueil');
-
-	homeChannels.forEach(channel => console.log(channel.id))
-	*/
 });
 
 client.on('messageReactionAdd', async (reaction, user) => {
@@ -118,7 +110,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 	if (channel.name !== "accueil") return;
 	
 	if (reaction.partial) {
-		console.log("tentative")
+		
 		try {
 			await reaction.fetch();
 
@@ -152,7 +144,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 			const server = reaction.message.guild;
 			const guildMember = reaction.message.guild.members.cache.get(user.id);
 			guildMember.roles.remove(server.roles.cache.find(role => role.name === `${number > 0 ? `${roleToUpdate} ${number}` : `${roleToUpdate}`}`))
-				.catch(err => console.log(err))
+				.catch(err => console.error(err))
 
 		} catch (error) {
 			console.error('Something went wrong when fetching the message:', error);
@@ -189,9 +181,8 @@ client.on('messageReactionAdd', async (reaction, user) => {
 		const server = reaction.message.guild;
 		const guildMember = reaction.message.guild.members.cache.get(user.id);
 		const finalRole = number > 0 ? `${roleToUpdate} ${number}` : `${roleToUpdate}`;
-		console.log("FINAL ROLE:", finalRole)
 		guildMember.roles.remove(server.roles.cache.find(role => role.name === finalRole))
-			.catch(err => console.log(err))
+			.catch(err => console.error(err))
 	}
   });
   
@@ -200,7 +191,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 const prefix = "!"
 
 client.on('messageCreate', async (message) => {
-    if (!message.content.startsWith(prefix) || message.author.bot || message.channelId !== "1059458515372101692") return;
+    if (!message.content.startsWith(prefix) || message.author.bot || message.channelId !== "1060022452782104586") return;
 
 	const args = message.content.slice(prefix.length).trim().split(/ +/);
 	const command = args.shift().toLowerCase();
