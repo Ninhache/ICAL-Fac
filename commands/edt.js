@@ -255,7 +255,7 @@ function sendEmbed(message, targetDate, filteredEvents) {
         fields: [],
         footer: {
             text: `Requested by @${message.author.username}`,
-            icon_url: `${message.author.avatarURL()}`,
+            icon_url: `${message.author.avatarURL() ?? "https://ia803204.us.archive.org/4/items/discordprofilepictures/discordblue.png"}`,
         },
     } 
 
