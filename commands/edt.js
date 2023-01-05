@@ -1,12 +1,13 @@
+const RRule = require('rrule').RRule;
 const ical = require('node-ical');
 const Discord = require('discord.js');
 const fs = require('fs');
 
+
 module.exports = {
     name: 'edt',
-	description: 'Show the student\s timetable',
+	description: 'Show the student\'s timetable',
 	execute(message, args) {
-        
         let date = parseArgs(args);
 
         const user = message.author;
@@ -16,7 +17,7 @@ module.exports = {
             roles.push(message.guild.roles.cache.get(`${element}`).name)
         });
         
-        printFromIcsToday(message, "personnel-2023-01-02.ics", date, roles);
+        printFromIcsToday(message, "Zeb93oMMBLj9s2Fx-2023-01-05.ics", date, roles);
     }
 }
 
@@ -45,93 +46,109 @@ module.exports = {
  * @param {*} roles Roles name, like ['Obligatoire 2', 'LAAS 3', ...]
  */
 function printFromIcsToday(message, name, targetDate, dirtyRoles) {
-
     const roles = cleanRoles(dirtyRoles);
-    let result;
-    
-    fs.readFile(`icals/${name}`, 'utf8', (err, data) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-      
-        // Parser le fichier
-        ical.parseICS(data, async (err, events) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-    
-            // Filtrer les événements pour n'inclure que ceux qui ont lieu à la date cible
-            let filteredEvents = Object.values(events).filter(event => {
-                // Vérifier si la date de début de l'événement correspond à la date cible
-                return sameDay(event?.start, targetDate);
-            });
-    
-            filteredEvents = filteredEvents.filter(event => {
-                // Check if the date is part of exceptions date
-                // https://www.kanzaki.com/docs/ical/exdate.html
-                const exDate = event.exdate;
-                if (exDate) {
-                    const array = Object.entries(exDate);
-                    //console.log(array.length) array[0][i]
-                    let result = true;
-                    for (let i = 0 ; i < array.length ; i++) {
-                        for (let y = 0 ; y < array[i].length ; y++) {
-                            if (sameDay(event.start,new Date(array[i][y]))) {
-                                result = false;
-                            }
-                        }
-                    }
-                    return result;
-                } else {
-                    return true;
-                }
-            })
 
-            // On vérifie que l'event est bien existant
-            filteredEvents = filteredEvents.filter(event => event.summary)
+    (async () => {
+
+        ical.parseFile(`icals/${name}`, (err, data) => {
+            if (err) {
+                console.error(err)
+            }
+            let filteredEvents = [];
+            for (const k in data) {
+                if (data.hasOwnProperty(k)) {
+                    const event = data[k];
+                    
+                    if (event.type !== "VEVENT") continue;
+                    if (!event.summary) continue;
+                    
+                    let dates = [];
+
+                    // Si y'a des règles, on récupère toutes les dates associés à celles-ci
+                    if (event.rrule) {
+                        dates.push(...cleanDateArray(generateDates(event.rrule)))
+                    } else {
+                        dates.push(event.start);
+                    }
+
+                    // On recup que les dates qui nous interesse
+                    dates = dates.filter(date => sameDay(date, targetDate));
+                    
+                    // si y'a une date qui nous interesse (normalement qu'une par tableau)
+                    if (dates.length > 0) {
+                        const date = dates[0];
+                        // On vérifie que la date ne fait pas partie d'une exception (event.exDate)
+                        if (event.exdate) {
+                            console.log(event.summary)
+                            const array = Object.entries(event.exdate);
+                            if (array) {
+                                let valid = true;
+                                for (let i = 0 ; i < array.length ; i++) {
+                                    if (sameDay(new Date(array[i][1]), new Date(date))) {
+                                        valid = false;
+                                    }
+                                }
+
+                                if (valid) {
+                                    filteredEvents.push({date, event})
+                                }
+                            } else {
+                                filteredEvents.push({date, event})
+                            }
+                        } else {
+                            filteredEvents.push({date, event})
+                        }
+                        
+                    } 
+                }
+            }
 
             // Filtre en fonction du rôle, si les rôles passés en paramètre est adéquat
-            filteredEvents = filteredEvents.filter(event => {
-            const type = parseSummarryArray(event.summary).toString();
-            const matiere = parseSummaryString(event.summary).toString();
-            // On vérifie si c'est un amphi
-            if (type === "Cours") {
-                // On vérifie qu'on a la matière
-                if (roles.find(role => parseSummarryArray(role).toString() === matiere)) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+            filteredEvents = filteredEvents.filter(obj => {
+                const { event } = obj;
 
-            // On vérifie si c'est une option, genre II2D
-            if (type !== "TD" && type !== "TP" && type !== "Cours") {
-                return true
-            }
-
-            const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
-            return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}`
-                === `${matiere} ${nGroup}`);
-            })
-    
-            filteredEvents.sort((a, b) => {
-                return new Date(a.start) - new Date(b.start);
-            });
-            
-            filteredEvents = filteredEvents.map(event => {
                 const type = parseSummarryArray(event.summary).toString();
                 const matiere = parseSummaryString(event.summary).toString();
+
+                // On vérifie si c'est un amphi
+                if (type === "Cours") {
+                    // On vérifie qu'on a la matière
+                    if (roles.find(role => parseSummarryArray(role).toString() === matiere)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+    
+                // On vérifie si c'est une option, genre II2D
+                if (type !== "TD" && type !== "TP" && type !== "Cours") {
+                    return true
+                }
+    
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
+                return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `${matiere} ${nGroup}`);
+            })
+
+            
+            // On sort pour avoir les cours dans le bon ordre
+            filteredEvents.sort((a,b) => a.date - b.date);
+
+            // On map pour avoir les données interessantes
+            filteredEvents = filteredEvents.map(obj => {
+                const { date, event } = obj;
+
+                const type = parseSummarryArray(event.summary).toString();
+                const matiere = parseSummaryString(event.summary).toString();
+                const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10);
 
                 let start = new Date(event.start);
-                const options = { timeZone: 'Europe/Paris' };
                 let end = new Date(event.end);
 
+                // NEED VPS IS NOT IN FRANCE
+                const options = { timeZone: 'Europe/Paris' };
                 start = new Date(start.toLocaleString('fr-FR', options));
                 end = new Date(end.toLocaleString('fr-FR', options));
-                console.log(start)
+                
                 return {
                     type: `${type} ${matiere} ${nGroup || ""}`,
                     location: `${event.location}`,
@@ -139,10 +156,12 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 }
             });
 
-            //console.log(filteredEvents)
-            sendEmbed(message, targetDate, filteredEvents); 
+            // filteredEvents.forEach(e => console.log("confirmée:", e.type))
+            
+            sendEmbed(message, targetDate, filteredEvents)
         });
-      })
+
+    })();
 }
 
 /**
@@ -197,10 +216,11 @@ function cleanRoles(dirtyRoles) {
 
     dirtyRoles.forEach(role => {
         if (parseSummarryArray(role).toString() === "Obligatoire") {
-            result.push(`TEC ${parseSummaryInteger(role)}`);
-            result.push(`RSX ${parseSummaryInteger(role)}`);
-            result.push(`RSX2 ${parseSummaryInteger(role)}`);
-            result.push(`Projet ${parseSummaryInteger(role)}`);
+            const integer = parseSummaryInteger(role);
+            result.push(`TEC ${integer}`);
+            result.push(`RSX ${integer}`);
+            result.push(`RSX2 ${integer}`);
+            result.push(`Projet ${integer}`);
         } else {
             result.push(role)
         }
@@ -213,10 +233,10 @@ function sendEmbed(message, targetDate, filteredEvents) {
     const channel = message.channel;
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     
-    //.setFooter('Requested by @' + message.author.username, message.author.avatarURL())
+    
 
     const response = {
-        color: 0x0099FF,
+        color: 0x36405e,
         title: `${targetDate.toLocaleDateString('fr-FR', options)}`,
         fields: [],
         footer: {
@@ -225,17 +245,23 @@ function sendEmbed(message, targetDate, filteredEvents) {
         },
     } 
 
-    /*
-    type: `${type} ${matiere} ${nGroup}`,
-    location: `${event.location}`,
-    time: `${start.getHours()}h${start.getMinutes()} -> ${end.getHours()}h${end.getMinutes()}`
-    */
-    for (let event in filteredEvents) {
+
+    if (filteredEvents.length === 0) {
+        response.color = 0xff0000;
         response.fields.push({
-            name: `${filteredEvents[event].type}\n${filteredEvents[event].location}`,
-			value: `${filteredEvents[event].time}`,
+            name: `Aucun cours !`,
+            value: 'Amuse toi bien chanceux.'
         });
+    } else {
+        for (let event in filteredEvents) {
+            response.fields.push({
+                name: `${filteredEvents[event].type}\n${filteredEvents[event].location}`,
+                value: `${filteredEvents[event].time}`,
+            });
+        }
     }
+
+    
 
     channel.send({ embeds: [response] });
 }
@@ -281,4 +307,17 @@ function getNextDayOfWeek(date, dayOfWeek) {
     const resultDate = new Date(date.getTime());
     resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
     return resultDate;
+}
+
+function cleanDateArray(dates) {
+    return dates.filter(date => !isNaN(date));
+}
+  
+/**
+ * Permet de générer toutes les dates en fonction des règles de création d'évènements
+ * @param {*} rrule 
+ * @returns 
+ */
+function generateDates(rrule) {
+    return new RRule(rrule.options).all();
 }

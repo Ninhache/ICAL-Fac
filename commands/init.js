@@ -136,7 +136,7 @@ function fillWelcomeChannel(message) {
       message.react("5️⃣")
     })
   
-  channel.send("Archi")
+  channel.send("ARCHI")
     .then(message => {
       message.react("1️⃣")
       message.react("2️⃣")
@@ -161,7 +161,7 @@ function fillWelcomeChannel(message) {
       message.react("4️⃣")
     });
 
-  channel.send("Logique")
+  channel.send("LOGIQUE")
     .then(message => {
       message.react("1️⃣")
       message.react("2️⃣")
