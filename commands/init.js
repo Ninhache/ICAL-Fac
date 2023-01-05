@@ -1,40 +1,29 @@
-const { channel } = require("diagnostics_channel");
-const { createChannel, ChannelType } = require("discord.js");
+const { ChannelType } = require("discord.js");
 
 module.exports = {
-    name: 'init',
-	description: 'Init the server by creating all the needed roles and setting up everything correctly',
+  name: 'Init',
+	description: 'Allows you to setup the server so that the bot can be used, can only be used by an administrator',
+  example: '!init',
 	execute(message, args) {
-        if (message.author.id !==  "236834751325929472") return;
-        message.reply("I've heard your request..");
-        createAllRoles(message);
+    if(message.member.hasPermission('ADMINISTRATOR')) {
+      message.reply("I've heard your request...");
+      
+      // Create all the roles needed
+      createAllRoles(message);
 
-        // create channel
-        createWelcomeChannel(message)
+      // Create the channel "Accueil"
+      createWelcomeChannel(message)
 
-        // create message + ajouter reaction? boutton ??
-        setTimeout(() => {
-          fillWelcomeChannel(message);
-        }, 3000)
-
+      // Fill channel after 3s to be sure channel has been created
+      setTimeout(() => {
+        fillWelcomeChannel(message);
+      }, 3000)
     }
+  }
 }
 
-/*
-6 | Obligatoire : 
-3 | Archi : 
-4 | PDS : 
-5 | JSFS : 
-5 | GL :
-4 | LAAS :
-3 | Logique :
-
--1| Option :
-
-*/
 function createAllRoles(message) {
-    // if () {
-    
+
     // Obligatoire
     for (let i = 0 ; i < 6 ; i++) {
       createRole(message, `Obligatoire ${i + 1}`);
@@ -70,12 +59,12 @@ function createAllRoles(message) {
       createRole(message, `Logique ${i + 1}`);
     }
 
-    createRole(message, 'BIOINFO'); // 
-    createRole(message, 'ICHP'); // Calcul haute performance per
-    createRole(message, 'II2D'); // Image et interaction 2D 
-    createRole(message, 'MAL'); // Machine Learning 
-    createRole(message, 'META'); 
-    createRole(message, 'PDM'); // Prog Machine
+    createRole(message, 'BIOINFO');
+    createRole(message, 'ICHP');
+    createRole(message, 'II2D');
+    createRole(message, 'MAL');
+    createRole(message, 'META');
+    createRole(message, 'PDM');
 }
 
 function createRole(message, name) {
@@ -102,6 +91,7 @@ function createWelcomeChannel(message) {
 
 }
 
+// ugly as fuck but who cares
 function fillWelcomeChannel(message) {
   // should never be undefined or null
   const channel = message.guild.channels.cache.find(channel => channel.name === "accueil");

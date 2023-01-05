@@ -1,45 +1,39 @@
 const RRule = require('rrule').RRule;
 const ical = require('node-ical');
-const Discord = require('discord.js');
-const fs = require('fs');
-
 
 module.exports = {
     name: 'edt',
-	description: 'Show the student\'s timetable',
+	description: 'Gives you your schedule, based on the roles you checked in <#1060032834749857852>',
+    example: '!edt [demain \| lundi \| mardi \| ...]',
 	execute(message, args) {
-        let date = parseArgs(args);
-
-        const user = message.author;
-        const tmpMember = message.guild?.members.cache.get(user.id)
-        const roles = [];
-        tmpMember?._roles.forEach(element => {
-            roles.push(message.guild.roles.cache.get(`${element}`).name)
-        });
+        const date = parseArgs(args);
+        const roles = getRolesFromAuthor(message)
         
+        // "Zeb93oMMBLj9s2Fx-2023-01-05.ics" is an ICS with all the data, on future, gonna refresh it every hours
         printFromIcsToday(message, "Zeb93oMMBLj9s2Fx-2023-01-05.ics", date, roles);
     }
 }
 
-/*
-6 | Obligatoire : msLdRbYEYYgZQTZF-2023-01-02.ics
-    > TEC
-    > RSX
-    > RSX2
-    > Projet
+/**
+ * Get all roles from the message author
+ * 
+ * @param {*} message 
+ * @returns 
+ */
+function getRolesFromAuthor(message) {
+    const roles = [];
+    const user = message.author;
+    const tmpMember = message.guild?.members.cache.get(user.id)
 
-3 | Archi : gB4PsiTT7p7wEByN-2023-01-02.ics
-4 | PDS : fpq2rQ2qgDCzXFYW-2023-01-02.ics
-5 | JSFS : XoskZbjeeT7YYc3d-2023-01-02.ics
-5 | GL : deoCHgoogEJDzDq6-2023-01-02.ics
-4 | LAAS : x55ExgaYbbBfD7WR-2023-01-02.ics
-3 | Logique : NDD7KLrWS395Hofj-2023-01-02.ics
+    tmpMember?._roles.forEach(element => {
+        roles.push(message.guild.roles.cache.get(`${element}`).name)
+    });
 
--1| Option : pGHaTgM6X5DofFNc-2023-01-02
-    > 1er mot différent de TP/TD/Cours
-*/
+    return roles;
+}
 
 /**
+ * Parse Ical > Filter Events > Send to Discord
  * 
  * @param {*} name All the ics
  * @param {*} targetDate The date (if not provided should be today)
@@ -64,31 +58,33 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                     
                     let dates = [];
 
-                    // Si y'a des règles, on récupère toutes les dates associés à celles-ci
+                    // Checking for rrules to get all the dates
                     if (event.rrule) {
                         dates.push(...cleanDateArray(generateDates(event.rrule)))
                     } else {
                         dates.push(event.start);
                     }
 
-                    // On recup que les dates qui nous interesse
+                    // Filtering all the date to keep only if date are of the same day
                     dates = dates.filter(date => sameDay(date, targetDate));
                     
-                    // si y'a une date qui nous interesse (normalement qu'une par tableau)
+                    // Should be 0 or 1 here
                     if (dates.length > 0) {
                         const date = dates[0];
-                        // On vérifie que la date ne fait pas partie d'une exception (event.exDate)
+                        // Checking if event have exDate
                         if (event.exdate) {
                             console.log(event.summary)
                             const array = Object.entries(event.exdate);
                             if (array) {
                                 let valid = true;
+
+                                // Checking for every exDate if they're the same as the current date, if it is, the date won't be add to the events to send to discord
                                 for (let i = 0 ; i < array.length ; i++) {
                                     if (sameDay(new Date(array[i][1]), new Date(date))) {
                                         valid = false;
                                     }
                                 }
-
+                                
                                 if (valid) {
                                     filteredEvents.push({date, event})
                                 }
@@ -103,14 +99,14 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 }
             }
 
-            // Filtre en fonction du rôle, si les rôles passés en paramètre est adéquat
+            // Filter roles accroding to the roles of the user
             filteredEvents = filteredEvents.filter(obj => {
                 const { event } = obj;
 
                 const type = parseSummarryArray(event.summary).toString();
                 const matiere = parseSummaryString(event.summary).toString();
 
-                // On vérifie si c'est un amphi
+                // If it's "Cours", that's means it's for everyone who got the class subject, means we don't care about the group
                 if (type === "Cours") {
                     // On vérifie qu'on a la matière
                     if (roles.find(role => parseSummarryArray(role).toString() === matiere)) {
@@ -120,22 +116,23 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                     }
                 }
     
-                // On vérifie si c'est une option, genre II2D
+                // If's its an option, we add it, because everyone got options
                 if (type !== "TD" && type !== "TP" && type !== "Cours") {
-                    return true
+                    return true;
                 }
     
+                // Else, we're checking the roles, if Matiere === "LAAS" and nGroup === 1, we're checking if the user have the role "LAAS 1"
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
                 return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `${matiere} ${nGroup}`);
             })
 
             
-            // On sort pour avoir les cours dans le bon ordre
+            // Sorting event to have the lessons on the right orders
             filteredEvents.sort((a,b) => a.date - b.date);
 
-            // On map pour avoir les données interessantes
+            // Refactoring the data
             filteredEvents = filteredEvents.map(obj => {
-                const { date, event } = obj;
+                const { event } = obj;
 
                 const type = parseSummarryArray(event.summary).toString();
                 const matiere = parseSummaryString(event.summary).toString();
@@ -144,7 +141,7 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 let start = new Date(event.start);
                 let end = new Date(event.end);
 
-                // NEED VPS IS NOT IN FRANCE
+                // Force that to get the right timezone, according to where the lessons takes place
                 const options = { timeZone: 'Europe/Paris' };
                 start = new Date(start.toLocaleString('fr-FR', options));
                 end = new Date(end.toLocaleString('fr-FR', options));
@@ -156,8 +153,6 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 }
             });
 
-            // filteredEvents.forEach(e => console.log("confirmée:", e.type))
-            
             sendEmbed(message, targetDate, filteredEvents)
         });
 
@@ -192,25 +187,38 @@ function parseSummarryArray(string) {
     return string.match(/\b\w+\b/)?.toString() ?? "";
 }
 
-// useless
-function printEvent(event) {
-    const start = new Date(event.start);
-    console.log(`Le ${start.getDate()}/${pad(start.getMonth().valueOf() + 1, 2)}, tu as ${event.summary}, de ${start.getHours()}h jusque ${new Date(event.end).getHours()}h, en ${event.location}`);
-}
-
-
+/**
+ * Check if two dates are the same
+ * 
+ * @param {*} d1 
+ * @param {*} d2 
+ * @returns 
+ */
 function sameDay(d1, d2) {
     return  d1?.getFullYear() === d2?.getFullYear() &&
             d1?.getMonth() === d2?.getMonth() &&
             d1?.getDate() === d2?.getDate();
 }
 
+/**
+ * Transform 1 into 01 if you give (1, 2) as parameters
+ * 
+ * @param {*} num 
+ * @param {*} size 
+ * @returns 
+ */
 function pad(num, size) {
     num = num.toString();
     while (num.length < size) num = "0" + num;
     return num;
 }
 
+/**
+ * Change the array in parameters, to change "Obligatoire" to the "right roles" (The same on the timetable)
+ * 
+ * @param {*} dirtyRoles 
+ * @returns 
+ */
 function cleanRoles(dirtyRoles) {
     const result = [];
 
@@ -229,12 +237,18 @@ function cleanRoles(dirtyRoles) {
     return result;
 }
 
+/**
+ * Send the embed message to discord.
+ * The date is passed as parameters
+ * 
+ * @param {*} message 
+ * @param {*} targetDate 
+ * @param {*} filteredEvents 
+ */
 function sendEmbed(message, targetDate, filteredEvents) {
     const channel = message.channel;
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     
-    
-
     const response = {
         color: 0x36405e,
         title: `${targetDate.toLocaleDateString('fr-FR', options)}`,
@@ -244,7 +258,6 @@ function sendEmbed(message, targetDate, filteredEvents) {
             icon_url: `${message.author.avatarURL()}`,
         },
     } 
-
 
     if (filteredEvents.length === 0) {
         response.color = 0xff0000;
@@ -261,16 +274,21 @@ function sendEmbed(message, targetDate, filteredEvents) {
         }
     }
 
-    
-
     channel.send({ embeds: [response] });
 }
 
+/**
+ * Parse current args, atm you've only to parse what the user want, and then here, you can ask for next day or a precise day
+ * 
+ * @param {*} args 
+ * @returns a Date, by default it's today
+ */
 function parseArgs (args) {
     let date;
     if (args[0]) {      
         const arg = args[0].toLowerCase();
-
+        
+        // Close your eyes for this switch please
         switch (arg) {
             case 'demain':
                 date = new Date();
@@ -303,20 +321,34 @@ function parseArgs (args) {
     return date ?? new Date();
 }
 
+/**
+ * Get the next day we'd asked, for example, if we're on Thursday and we ask for Wednesday, we will get the next Wednesday (the one in the next week)
+ * 
+ * @param {*} date 
+ * @param {*} dayOfWeek @see parseArgs
+ * @returns Date of the asked later
+ */
 function getNextDayOfWeek(date, dayOfWeek) {
     const resultDate = new Date(date.getTime());
     resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
     return resultDate;
 }
 
+/**
+ * Remove all invalid dates from the array passed as parameters
+ * 
+ * @param {*} dates 
+ * @returns cleaned array
+ */
 function cleanDateArray(dates) {
     return dates.filter(date => !isNaN(date));
 }
   
 /**
- * Permet de générer toutes les dates en fonction des règles de création d'évènements
+ * Generates all dates for an event.RRule
+ * 
  * @param {*} rrule 
- * @returns 
+ * @returns all dates of the rrule
  */
 function generateDates(rrule) {
     return new RRule(rrule.options).all();
