@@ -9,8 +9,7 @@ module.exports = {
         const date = parseArgs(args);
         const roles = getRolesFromAuthor(message)
         
-        // "Zeb93oMMBLj9s2Fx-2023-01-05.ics" is an ICS with all the data, on future, gonna refresh it every hours
-        printFromIcsToday(message, "Zeb93oMMBLj9s2Fx-2023-01-05.ics", date, roles);
+        printFromIcsToday(message, "calendars.ics", date, roles);
     }
 }
 
