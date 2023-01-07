@@ -147,7 +147,7 @@ function parseOptions(number, roleToUpdate) {
 			roleToUpdate = "II2D";
 			break;
 		case 4:
-			roleToUpdate = "MAL";
+			roleToUpdate = "ML";
 			break;
 		case 5:
 			roleToUpdate = "META";

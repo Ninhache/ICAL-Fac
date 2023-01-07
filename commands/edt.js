@@ -1,4 +1,5 @@
 const RRule = require('rrule').RRule;
+const { ConnectionVisibility } = require('discord.js');
 const ical = require('node-ical');
 
 module.exports = {
@@ -82,7 +83,8 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                             const array = Object.entries(event.exdate);
                             if (array) {
                                 let valid = true;
-
+                                
+            
                                 // Checking for every exDate if they're the same as the current date, if it is, the date won't be add to the events to send to discord
                                 for (let i = 0 ; i < array.length ; i++) {
                                     if (sameDay(new Date(array[i][1]), new Date(date))) {
@@ -114,16 +116,12 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 // If it's "Cours", that's means it's for everyone who got the class subject, means we don't care about the group
                 if (type === "Cours") {
                     // On vérifie qu'on a la matière
-                    if (roles.find(role => parseSummarryArray(role).toString() === matiere)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+		    return roles.find(role => parseSummarryArray(role).toString() === matiere)
                 }
-    
-                // If's its an option, we add it, because everyone got options
+                
+		        // If's its an option, we add it, because everyone got options
                 if (type !== "TD" && type !== "TP" && type !== "Cours") {
-                    return true;
+                    return roles.find(role => parseSummarryArray(role).toString() === type)
                 }
 
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
@@ -137,13 +135,18 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `${matiere} ${nGroup}`);
             })
 
-            
+            console.log(filteredEvents)
             // Sorting event to have the lessons on the right orders
             filteredEvents.sort((a,b) => a.date - b.date);
 
             // Refactoring the data
             filteredEvents = filteredEvents.map(obj => {
                 const { event } = obj;
+
+                console.log(event.summary)
+                console.log(event.start)
+                console.log(event.end)
+                console.log("-")
 
                 const type = parseSummarryArray(event.summary).toString();
                 const matiere = parseSummaryString(event.summary).toString();
@@ -152,11 +155,7 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 let start = new Date(event.start);
                 let end = new Date(event.end);
 
-                // Force that to get the right timezone, according to where the lessons takes place
-                const options = { timeZone: 'Europe/Paris' };
-                start = new Date(start.toLocaleString('fr-FR', options));
-                end = new Date(end.toLocaleString('fr-FR', options));
-                
+
                 return {
                     type: `${type} ${matiere} ${nGroup || ""}`,
                     location: `${event.location}`,
