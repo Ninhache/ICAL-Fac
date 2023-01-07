@@ -120,9 +120,15 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 if (type !== "TD" && type !== "TP" && type !== "Cours") {
                     return true;
                 }
-    
-                // Else, we're checking the roles, if Matiere === "LAAS" and nGroup === 1, we're checking if the user have the role "LAAS 1"
+
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
+                if (matiere === "JFS") {
+                    return roles.find(role => {
+                        return parseSummarryArray(role) === "JSFS";
+                    });
+                }
+                
+                // Else, we're checking the roles, if Matiere === "LAAS" and nGroup === 1, we're checking if the user have the role "LAAS 1"
                 return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `${matiere} ${nGroup}`);
             })
 
