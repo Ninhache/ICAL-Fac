@@ -8,8 +8,13 @@ module.exports = {
 	execute(message, args) {
         const date = parseArgs(args);
         const roles = getRolesFromAuthor(message)
-        
-        printFromIcsToday(message, "calendars.ics", date, roles);
+
+        // If the user doesnt have ranks, the bot will tell him there's a problem, there's nonsense to continue if this array is empty
+        if (roles.length === 0) {
+            message.reply("Excuse-moi, mais tu n'as aucun rôle, je ne suis donc pas en mesure de te fournir un emploi du temps, rendez-vous dans <#1060032834749857852>");
+        } else {
+            printFromIcsToday(message, "calendars.ics", date, roles);
+        }   
     }
 }
 
@@ -39,6 +44,7 @@ function getRolesFromAuthor(message) {
  * @param {*} roles Roles name, like ['Obligatoire 2', 'LAAS 3', ...]
  */
 function printFromIcsToday(message, name, targetDate, dirtyRoles) {
+
     const roles = cleanRoles(dirtyRoles);
 
     (async () => {
@@ -268,7 +274,7 @@ function sendEmbed(message, targetDate, filteredEvents) {
         response.color = 0xff0000;
         response.fields.push({
             name: `Aucun cours !`,
-            value: 'Amuse toi bien chanceux.'
+            value: 'Amuse toi bien.'
         });
     } else {
         for (let event in filteredEvents) {
