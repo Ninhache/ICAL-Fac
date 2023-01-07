@@ -52,6 +52,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 			const server = reaction.message.guild;
 			const guildMember = reaction.message.guild.members.cache.get(user.id);
 			const finalRole = number > 0 ? `${roleToUpdate} ${number}` : `${roleToUpdate}`;
+
 			guildMember.roles.add(server.roles.cache.find(role => role.name === finalRole))
 		} catch (error) {
 			console.error('Something went wrong when fetching the message:', error);
@@ -105,7 +106,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 		let number = parseEmoji(reaction._emoji.name);
 			
 		if (roleToUpdate === "OPTIONS") {
-			roleToUpdate = parseOptions(number, roleToUpdate);
+			roleToUpdate = parseOptions(number);
 			number = -1;
 		}
 
@@ -135,7 +136,8 @@ client.on('messageCreate', async (message) => {
 
 client.login(token);
 
-function parseOptions(number, roleToUpdate) {
+function parseOptions(number) {
+	let roleToUpdate;
 	switch (number) {
 		case 1:
 			roleToUpdate = "BIOINFO";
@@ -166,10 +168,6 @@ function parseOptions(number, roleToUpdate) {
  */
 function parseSummarryArray(string) {
     return string.match(/\b\w+\b/)?.toString() ?? "";
-}
-
-function parseOptions(smth) {
-	
 }
 
 function parseEmoji(emoji) {

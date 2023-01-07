@@ -29,14 +29,12 @@ module.exports = {
         } 
 
         for (let command in allCommands) {
-            console.log("===")
-            console.log(command)
             response.fields.push({
                 name: `${allCommands[command].example}`,
                 value: `${allCommands[command].description}`
             });
         }
-        console.log(allCommands)
+        
         message.channel.send({ embeds: [response] });
 	},
 };

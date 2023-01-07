@@ -79,7 +79,6 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                         const date = dates[0];
                         // Checking if event have exDate
                         if (event.exdate) {
-                            console.log(event.summary)
                             const array = Object.entries(event.exdate);
                             if (array) {
                                 let valid = true;
@@ -135,18 +134,12 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `${matiere} ${nGroup}`);
             })
 
-            console.log(filteredEvents)
             // Sorting event to have the lessons on the right orders
             filteredEvents.sort((a,b) => a.date - b.date);
 
             // Refactoring the data
             filteredEvents = filteredEvents.map(obj => {
                 const { event } = obj;
-
-                console.log(event.summary)
-                console.log(event.start)
-                console.log(event.end)
-                console.log("-")
 
                 const type = parseSummarryArray(event.summary).toString();
                 const matiere = parseSummaryString(event.summary).toString();
