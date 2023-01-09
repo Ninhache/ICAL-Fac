@@ -126,7 +126,7 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
                 if (matiere === "JFS") {
                     return roles.find(role => {
-                        return parseSummarryArray(role) === "JSFS" && parseSummaryInteger(role) === nGroup;
+                        return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `JSFS ${nGroup}`);
                     });
                 }
                 
