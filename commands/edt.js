@@ -115,7 +115,7 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 // If it's "Cours", that's means it's for everyone who got the class subject, means we don't care about the group
                 if (type === "Cours") {
                     // On vérifie qu'on a la matière
-		    return roles.find(role => parseSummarryArray(role).toString() === matiere)
+		            return roles.find(role => parseSummarryArray(role).toString() === matiere)
                 }
                 
 		        // If's its an option, we add it, because everyone got options
@@ -126,7 +126,7 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
                 if (matiere === "JFS") {
                     return roles.find(role => {
-                        return parseSummarryArray(role) === "JSFS";
+                        return parseSummarryArray(role) === "JSFS" && parseSummaryInteger(role) === nGroup;
                     });
                 }
                 
