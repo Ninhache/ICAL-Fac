@@ -109,29 +109,29 @@ function printFromIcsToday(message, name, targetDate, dirtyRoles) {
             filteredEvents = filteredEvents.filter(obj => {
                 const { event } = obj;
 
-                const type = parseSummarryArray(event.summary).toString();
-                const matiere = parseSummaryString(event.summary).toString();
+                const type = parseSummarryArray(event.summary).toString().toLowerCase();;
+                const matiere = parseSummaryString(event.summary).toString().toLowerCase();;
 
                 // If it's "Cours", that's means it's for everyone who got the class subject, means we don't care about the group
-                if (type === "Cours") {
+                if (type === "cours") {
                     // On vérifie qu'on a la matière
-		            return roles.find(role => parseSummarryArray(role).toString() === matiere)
+		            return roles.find(role => parseSummarryArray(role).toString().toLowerCase() === matiere)
                 }
                 
 		        // If's its an option, we add it, because everyone got options
-                if (type !== "TD" && type !== "TP" && type !== "Cours") {
-                    return roles.find(role => parseSummarryArray(role).toString() === type)
+                if (type !== "td" && type !== "tp" && type !== "cours") {
+                    return roles.find(role => parseSummarryArray(role).toString().toLowerCase() === type)
                 }
 
                 const nGroup = parseInt(parseSummaryInteger(event.summary).toString(), 10)
-                if (matiere === "JFS") {
+                if (matiere === "jfs") {
                     return roles.find(role => {
                         return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `JSFS ${nGroup}`);
                     });
                 }
                 
                 // Else, we're checking the roles, if Matiere === "LAAS" and nGroup === 1, we're checking if the user have the role "LAAS 1"
-                return roles.find(role => `${parseSummarryArray(role).toString()} ${parseSummaryInteger(role).toString()}` === `${matiere} ${nGroup}`);
+                return roles.find(role => `${parseSummarryArray(role).toString().toLowerCase()} ${parseSummaryInteger(role).toString()}` === `${matiere} ${nGroup}`);
             })
 
             // Sorting event to have the lessons on the right orders
