@@ -10,8 +10,6 @@ module.exports = {
         const date = parseArgs(args);
         const roles = getRolesFromAuthor(message)
 
-        console.log(message)
-
         // If the user doesnt have ranks, the bot will tell him there's a problem, there's nonsense to continue if this array is empty
         if (roles.length === 0) {
             message.reply("Excuse-moi, mais tu n'as aucun rôle, je ne suis donc pas en mesure de te fournir un emploi du temps, rendez-vous dans <#1060032834749857852>");
@@ -372,8 +370,6 @@ function lookingLikeDate(message) {
 }
 
 function parseDate(message) {
-    // console.log(message)
     const parts = message.split(" ")[1].split(/[\/-]/);
-    console.log(parts)
     return new Date(2023, parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
 }
