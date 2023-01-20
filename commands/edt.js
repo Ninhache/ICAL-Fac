@@ -14,7 +14,11 @@ module.exports = {
         if (roles.length === 0) {
             message.reply("Excuse-moi, mais tu n'as aucun rôle, je ne suis donc pas en mesure de te fournir un emploi du temps, rendez-vous dans <#1060032834749857852>");
         } else {
-            printFromIcsToday(message, "calendars.ics", date, roles);
+            if (lookingLikeDate(message.content)) {
+                printFromIcsToday(message, "calendars.ics", parseDate(message.content), roles);
+            } else {
+                printFromIcsToday(message, "calendars.ics", date, roles);
+            }
         }   
     }
 }
@@ -355,4 +359,17 @@ function cleanDateArray(dates) {
  */
 function generateDates(rrule) {
     return new RRule(rrule.options).all();
+}
+
+/**
+ * Parse the message to know if it's maybe a date
+ * @param {*} message
+ */
+function lookingLikeDate(message) {
+    return message.includes("-") || message.includes("/");
+}
+
+function parseDate(message) {
+    const parts = message.split(" ")[1].split(/[\/-]/);
+    return new Date(2023, parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
 }
